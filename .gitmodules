@@ -1,3 +1,9 @@
 [submodule "lib/pico_pio_usb"]
 	path = lib/pico_pio_usb
 	url = https://github.com/sekigon-gonnoc/Pico-PIO-USB
+[submodule "lib/pico-mcp23017"]
+	path = lib/pico-mcp23017
+	url = git@github.com:adamboardman/pico-mcp23017.git
+[submodule "lib/pico-interfaces"]
+	path = lib/pico-interfaces
+	url = git@github.com:adamboardman/pico-interfaces.git
