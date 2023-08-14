@@ -17,6 +17,7 @@
 #include "addons/extra_button.h"
 #include "addons/keyboard_host.h"
 #include "addons/i2canalog1219.h"
+#include "addons/i2cioexpander.h"
 #include "addons/jslider.h"
 #include "addons/playernum.h"
 #include "addons/reverse.h"
@@ -110,6 +111,7 @@ void GP2040::setup() {
   	addons.LoadAddon(new ExtraButtonAddon(), CORE0_INPUT);
   	addons.LoadAddon(new FocusModeAddon(), CORE0_INPUT);
 	addons.LoadAddon(new I2CAnalog1219Input(), CORE0_INPUT);
+	addons.LoadAddon(new I2CIOExpanderAddon(), CORE0_INPUT);
 	addons.LoadAddon(new JSliderInput(), CORE0_INPUT);
 	addons.LoadAddon(new ReverseInput(), CORE0_INPUT);
 	addons.LoadAddon(new TurboInput(), CORE0_INPUT);
@@ -130,6 +132,9 @@ void GP2040::run() {
 		if (configMode == true) {
 			ConfigManager& configManager = ConfigManager::getInstance();
 			ConfigManager::getInstance().loop();
+
+			// Pre-Process add-ons to get inputs
+			addons.PreprocessAddons(ADDON_PROCESS::CORE0_INPUT);
 
 			gamepad->read();
 			rebootHotkeys.process(gamepad, configMode);
@@ -185,6 +190,10 @@ GP2040::BootAction GP2040::getBootAction() {
 				// Determine boot action based on gamepad state during boot
 				Gamepad * gamepad = Storage::getInstance().GetGamepad();
 				gamepad->read();
+
+				AddonManager addons;
+				// Init I2C Expander addon so buttons can be used for boot mode selection
+				addons.LoadAddon(new I2CIOExpanderAddon(), CORE0_INPUT);
 
 				ForcedSetupOptions& forcedSetupOptions = Storage::getInstance().getForcedSetupOptions();
 				bool modeSwitchLocked = forcedSetupOptions.mode == FORCED_SETUP_MODE_LOCK_MODE_SWITCH ||

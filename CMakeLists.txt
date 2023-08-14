@@ -137,6 +137,7 @@ src/addons/dualdirectional.cpp
 src/addons/extra_button.cpp
 src/addons/keyboard_host.cpp
 src/addons/i2canalog1219.cpp
+src/addons/i2cioexpander.cpp
 src/addons/jslider.cpp
 src/addons/i2cdisplay.cpp
 src/addons/neopicoleds.cpp
@@ -159,6 +160,9 @@ set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME ${PROJECT_NAME}_${C
 
 pico_set_program_name(GP2040-CE "GP2040-CE")
 pico_set_program_version(GP2040-CE "0.7.3")
+# enable usb output, disable uart output
+# pico_enable_stdio_usb(GP2040-CE 1)
+# pico_enable_stdio_uart(GP2040-CE 1)
 
 target_link_libraries(${PROJECT_NAME}
 pico_stdlib
@@ -180,6 +184,7 @@ SNESpad
 pico_mbedtls
 TinyUSB_Gamepad
 nanopb
+pico_mcp23017
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC
