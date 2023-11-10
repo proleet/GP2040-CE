@@ -104,6 +104,7 @@ void GP2040::setup() {
 	adc_init();
 
 	// Setup Add-ons
+	addons.LoadAddon(new I2CIOExpanderAddon(), CORE0_INPUT);
   	addons.LoadAddon(new KeyboardHostAddon(), CORE0_INPUT);
 	addons.LoadAddon(new AnalogInput(), CORE0_INPUT);
 	addons.LoadAddon(new BootselButtonAddon(), CORE0_INPUT);
@@ -111,7 +112,6 @@ void GP2040::setup() {
   	addons.LoadAddon(new ExtraButtonAddon(), CORE0_INPUT);
   	addons.LoadAddon(new FocusModeAddon(), CORE0_INPUT);
 	addons.LoadAddon(new I2CAnalog1219Input(), CORE0_INPUT);
-	addons.LoadAddon(new I2CIOExpanderAddon(), CORE0_INPUT);
 	addons.LoadAddon(new JSliderInput(), CORE0_INPUT);
 	addons.LoadAddon(new ReverseInput(), CORE0_INPUT);
 	addons.LoadAddon(new TurboInput(), CORE0_INPUT);
@@ -193,7 +193,7 @@ GP2040::BootAction GP2040::getBootAction() {
 
 				AddonManager addons;
 				// Init I2C Expander addon so buttons can be used for boot mode selection
-				addons.LoadAddon(new I2CIOExpanderAddon(), CORE0_INPUT);
+				// addons.LoadAddon(new I2CIOExpanderAddon(), CORE0_INPUT);
 
 				ForcedSetupOptions& forcedSetupOptions = Storage::getInstance().getForcedSetupOptions();
 				bool modeSwitchLocked = forcedSetupOptions.mode == FORCED_SETUP_MODE_LOCK_MODE_SWITCH ||

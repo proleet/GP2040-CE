@@ -92,7 +92,7 @@ int Mcp23017::setup_bank_configuration(int reg, bool mirroring, bool polarity) c
 	set_bit(ioConValue, MCP23017_IOCON_SEQOP_BIT, false);
 	set_bit(ioConValue, MCP23017_IOCON_DISSLW_BIT, false);
 	set_bit(ioConValue, MCP23017_IOCON_HAEN_BIT, false);
-	set_bit(ioConValue, MCP23017_IOCON_ODR_BIT, false);
+	set_bit(ioConValue, MCP23017_IOCON_ODR_BIT, true);
 	set_bit(ioConValue, MCP23017_IOCON_INTPOL_BIT, polarity);
 	return write_register(reg, ioConValue);
 }

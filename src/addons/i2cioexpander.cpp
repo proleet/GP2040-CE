@@ -11,6 +11,15 @@ static const int MCP_ALL_PINS_PULL_UP = 0xffff;
 static const int MCP_ALL_PINS_COMPARE_TO_LAST = 0x0000;
 static const int MCP_ALL_PINS_INTERRUPT_ENABLED = 0xffff;
 
+#define MCP_IRQ_GPIO_PIN PIN_BUTTON_A1
+
+bool interrupt = false;
+
+void I2CIOExpanderAddon::gpio_callback(uint gpio, uint32_t events) {
+	if ((gpio == MCP_IRQ_GPIO_PIN) && (events & GPIO_IRQ_EDGE_FALL)) {
+		interrupt = true;
+	}
+}
 
 bool I2CIOExpanderAddon::available() {
     return true;
@@ -18,46 +27,49 @@ bool I2CIOExpanderAddon::available() {
 
 void I2CIOExpanderAddon::setup() {
     const AddonOptions& options = Storage::getInstance().getAddonOptions();
+    gpio_init(PICO_DEFAULT_LED_PIN);
+    gpio_set_dir(PICO_DEFAULT_LED_PIN, GPIO_OUT);	
 
+	auto setupi2c = [](){
+		i2c_init(I2C_IOEXPANDER_BLOCK, I2C_IOEXPANDER_SPEED);
+		gpio_set_function(I2C_IOEXPANDER_SDA_PIN, GPIO_FUNC_I2C);
+		gpio_set_function(I2C_IOEXPANDER_SCL_PIN, GPIO_FUNC_I2C);
+		gpio_pull_up(I2C_IOEXPANDER_SDA_PIN);
+		gpio_pull_up(I2C_IOEXPANDER_SCL_PIN);
+		gpio_pull_up(MCP_IRQ_GPIO_PIN);
+	};
+	setupi2c();
 	expander = new Mcp23017(I2C_IOEXPANDER_BLOCK, I2C_IOEXPANDER_ADDRESS);
-
-	i2c_init(I2C_IOEXPANDER_BLOCK, I2C_IOEXPANDER_SPEED);
-	gpio_set_function(I2C_IOEXPANDER_SDA_PIN, GPIO_FUNC_I2C);
-	gpio_set_function(I2C_IOEXPANDER_SCL_PIN, GPIO_FUNC_I2C);
-	gpio_pull_up(I2C_IOEXPANDER_SDA_PIN);
-	gpio_pull_up(I2C_IOEXPANDER_SCL_PIN);
-
-    int result;
 	
-	result = expander->setup(MIRROR_INTERRUPTS, POLARITY_INTERRUPT_ACTIVE_LOW);
-	result = expander->set_io_direction(MCP_ALL_PINS_INPUT);
-	result = expander->set_pullup(MCP_ALL_PINS_PULL_UP);
-	result = expander->set_interrupt_type(MCP_ALL_PINS_COMPARE_TO_LAST);
-	result = expander->enable_interrupt(MCP_ALL_PINS_INTERRUPT_ENABLED);
+	expander->setup(MIRROR_INTERRUPTS, POLARITY_INTERRUPT_ACTIVE_LOW);
+	expander->set_io_direction(0xFEFF);
+	expander->set_pullup(0xFEFF);
+	expander->set_interrupt_type(MCP_ALL_PINS_COMPARE_TO_LAST);
+	expander->enable_interrupt(0xFEFF);
+	// clear interrupt
+	int input_values_ok = expander->update_and_get_input_values();
 
-	// gpio_set_irq_enabled_with_callback(gpio_irq, GPIO_IRQ_EDGE_FALL, true, &gpio_callback);
-
-	//once we are listening for interrupts clear previous ones just incase
-	// int int_values = mcp.get_interrupt_values();
-
-    // preprocess()
+	gpio_set_irq_enabled_with_callback(
+		MCP_IRQ_GPIO_PIN, 
+		GPIO_IRQ_EDGE_FALL,
+		true, 
+		&I2CIOExpanderAddon::gpio_callback
+	);
 }
 
 void I2CIOExpanderAddon::preprocess() {
-    // Gamepad * gamepad = Storage::getInstance().GetGamepad();
+    Gamepad * gamepad = Storage::getInstance().GetGamepad();
+	bool s1 = gamepad->pressedS1();
 
-	// int pin = expander->get_last_interrupt_pin();
-	// int int_values = expander->get_interrupt_values();
-	// int input_values_ok = expander->update_and_get_input_values();
-
-	// printf("MCP(0x%2x), PIN: %d, Int:%d, InputOK:%d\n", expander->get_address(), pin, int_values, input_values_ok);
-	bool pin28 = expander->get_last_input_pin_value(28);
-	// printf("InputPin0: %d\n", pin28);
-	gpio_put(25, 1);
-	// printf("InputPin1: %d\n", expander->get_last_input_pin_value(1));
-	// printf("InputPin2: %d\n", expander->get_last_input_pin_value(2));
-	// printf("InputPin3: %d\n", expander->get_last_input_pin_value(3));
+	if (interrupt) {
+		interrupt = false;
+		expander->update_and_get_input_values();
+		gpio_put(PICO_DEFAULT_LED_PIN, !expander->get_last_input_pin_value(0));
+	}
+	expander->set_output_bit_for_pin(8, s1);
+	expander->flush_output();
 }
 
-void I2CIOExpanderAddon::process() {
+I2CIOExpanderAddon::~I2CIOExpanderAddon() {
+	delete expander;
 }

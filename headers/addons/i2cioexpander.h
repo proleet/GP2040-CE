@@ -19,7 +19,7 @@
 #endif
 
 #ifndef I2C_IOEXPANDER_BLOCK
-#define I2C_IOEXPANDER_BLOCK i2c0
+#define I2C_IOEXPANDER_BLOCK i2c1
 #endif
 
 #ifndef I2C_IOEXPANDER_SPEED
@@ -107,20 +107,13 @@ class I2CIOExpanderAddon : public GPAddon {
 public:
 	virtual bool available();   // GPAddon available
 	virtual void setup();       // I/O Expander Setup
-	virtual void process();     // I/O Expander Process
+	virtual void process() {};     // I/O Expander Process
     virtual void preprocess();  // I/O Expander Pre-Process
     virtual std::string name() { return I2CIOExpanderName; }
 private:
     Mcp23017 * expander;
-    uint8_t i2cIOExpanderAddress;
-	int i2cIOExpanderBlock;
-	uint8_t i2cIOExpanderINTPin;
-	ExpanderPorts i2cIOExpanderNumPorts;
-	uint32_t i2cIOExpanderPorts[16];
-	uint8_t i2cIOExpanderSCLPin;
-	uint8_t i2cIOExpanderSDAPin;
-	uint32_t i2cIOExpanderSpeed;
-    uint16_t pinMask;       // Pin Mask for I/O Expander
+	~I2CIOExpanderAddon();
+	static void gpio_callback(uint gpio, uint32_t events);
 };
 
 #endif  // _IOExpander_H
